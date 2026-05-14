@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【動漫角色大挑戰】</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-blue: #0A1931;
+            --bright-blue: #185ADB;
+            --gold: #FFC947;
+            --red: #B91C1C;
+            --white: #EFEFEF;
+            --case-bg: #F3F4F6;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-blue);
+            color: var(--white);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 偵探辦公室背景裝飾 */
+        body::before {
+            content: "TOP SECRET";
+            position: fixed;
+            top: 10%;
+            left: -5%;
+            font-size: 8rem;
+            color: rgba(255, 255, 255, 0.03);
+            transform: rotate(-30deg);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 案件卡片容器 */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--case-bg);
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 0 10px var(--bright-blue);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 裝飾線條 */
+        .container::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            border-style: solid;
+            border-width: 0 60px 60px 0;
+            border-color: transparent var(--bright-blue) transparent transparent;
+        }
+
+        h1 {
+            color: var(--dark-blue);
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            border-bottom: 4px solid var(--red);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        #game-info {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--bright-blue);
+            border: 2px solid var(--bright-blue);
+            padding: 10px;
+            background: #fff;
+        }
+
+        .case-content {
+            background: white;
+            padding: 25px;
+            border-left: 10px solid var(--gold);
+            margin-bottom: 30px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: var(--white);
+            border: 3px solid var(--dark-blue);
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: var(--gold);
+            transform: translateX(5px);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .btn.correct {
+            background-color: #10B981 !important;
+            color: white;
+            border-color: #059669;
+        }
+
+        .btn.wrong {
+            background-color: var(--red) !important;
+            color: white;
+            border-color: #991B1B;
+        }
+
+        /* 回饋區塊 */
+        #feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .feedback-title {
+            font-weight: 900;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .feedback-explanation {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        #next-btn {
+            display: none;
+            width: 100%;
+            background-color: var(--bright-blue);
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #next-btn:hover {
+            background-color: var(--dark-blue);
+        }
+
+        /* 結束畫面 */
+        #result-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            color: var(--red);
+            font-weight: 900;
+            margin: 20px 0;
+        }
+
+        .comment {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .retry-btn {
+            background-color: var(--gold);
+            color: var(--dark-blue);
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 手機版優化 */
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.5rem; }
+            .question-text { font-size: 1.2rem; }
+            .btn { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>【動漫角色大挑戰】</h1>
+
+    <div id="quiz-screen">
+        <div id="game-info">
+            <span id="case-number">案件編號：1 / 15</span>
+            <span id="current-score">目前積分：0</span>
+        </div>
+
+        <div class="case-content">
+            <div id="question" class="question-text">正在讀取案件線索...</div>
+            <div id="options" class="options-grid">
+                </div>
+        </div>
+
+        <div id="feedback">
+            <div class="feedback-title" id="feedback-status"></div>
+            <div class="feedback-explanation" id="explanation-text"></div>
+        </div>
+
+        <button id="next-btn" onclick="handleNext()">前往下一個案件 ▶</button>
+    </div>
+
+    <div id="result-screen">
+        <h2>推理結束：案件報告</h2>
+        <div class="final-score" id="score-display">0</div>
+        <div class="comment" id="comment-display">正在彙整評價...</div>
+        <button class="retry-btn" onclick="initGame()">重新挑戰</button>
+    </div>
+</div>
+
+<script>
+    /**
+     * 【學生修改區】
+     * 如果要換成自己的題目，只要修改下面這個 questions 陣列即可。
+     * q: 題目
+     * o: 選項 (系統會自動打亂順序，所以正確答案放哪裡都可以)
+     * a: 正確答案在 o 陣列中的索引 (0代表第一個, 1代表第二個, 2代表第三個)
+     * e: 解答說明
+     */
+    const questions = [
+        // 基礎題目 (1-10)
+        { q: "在《SPY×FAMILY 間諜家家酒》中，擁有讀心能力的少女是誰？", o: ["安妮亞", "約兒", "貝琪"], a: 0, e: "安妮亞·佛傑擁有讀心超能力，最喜歡吃花生！" },
+        { q: "《鬼滅之刃》中，主角竈門炭治郎使用的是哪種呼吸法起家？", o: ["雷之呼吸", "水之呼吸", "獸之呼吸"], a: 1, e: "炭治郎最初是跟隨鱗瀧左近次學習「水之呼吸」。" },
+        { q: "《咒術迴戰》中，被稱為「最強咒術師」的人物是？", o: ["伏黑惠", "虎杖悠仁", "五條悟"], a: 2, e: "五條悟擁有「六眼」與「無下限咒術」，是公認的最強。" },
+        { q: "《葬送的芙莉蓮》中，芙莉蓮的種族是什麼？", o: ["精靈", "矮人", "人類"], a: 0, e: "芙莉蓮是長壽的精靈族法師。" },
+        { q: "《我推的孩子》中，星野愛所屬的偶像團體名稱是？", o: ["B小町", "小愛組", "草莓娛樂"], a: 0, e: "星野愛是傳說偶像團體「B小町」的中心成員。" },
+        { q: "《孤獨搖滾！》中，主角後藤一里在網路上的暱稱是？", o: ["吉他英雄", "小孤獨", "芒果假面"], a: 0, e: "後藤一里以「guitarhero」的名義在網路上傳演奏影片。" },
+        { q: "《排球少年！！》主角日向翔陽嚮往的目標被稱為？", o: ["小巨人", "排球之神", "最強之盾"], a: 0, e: "日向因為看到電視上的「小巨人」而開始打排球。" },
+        { q: "《進擊的巨人》中，調查兵團的披風標誌被稱為什麼？", o: ["自由之翼", "守護之盾", "開拓之劍"], a: 0, e: "那個青白色的翅膀標誌象徵著「自由之翼」。" },
+        { q: "《鏈鋸人》主角淀治與哪隻惡魔簽訂契約？", o: ["波奇塔", "帕瓦", "瑪奇瑪"], a: 0, e: "淀治與鏈鋸惡魔「波奇塔」融合成為鏈鋸人。" },
+        { q: "《我的英雄學院》中，主角綠谷出久的英雄名是？", o: ["廢久(Deku)", "爆殺卿", "焦凍"], a: 0, e: "綠谷將原本被嘲笑的「Deku」轉化為「全力以赴」的意思作為英雄名。" },
+        
+        // 進階題目 (11-15)
+        { q: "動畫《賽馬娘 Pretty Derby》中，第一季的主角是哪位賽馬娘？", o: ["特別週", "東海帝王", "黃金船"], a: 0, e: "第一季是以「特別週」為了成為日本第一賽馬娘而努力的故事。" },
+        { q: "《藥師少女的獨語》中，貓貓對哪種東西展現出近乎瘋狂的執著？", o: ["毒藥與藥草", "高級綢緞", "名貴首飾"], a: 0, e: "貓貓是一名熱愛試毒與研究藥草的奇特少女。" },
+        { q: "動畫電影《鈴芽之旅》中，帶領鈴芽關門的關鍵角色變成了一張什麼？", o: ["三隻腳的椅子", "兩隻腳的桌子", "會說話的貓"], a: 0, e: "草太被大臣詛咒，靈魂進入了鈴芽小時候用的三腳椅子裡。" },
+        { q: "《藍色監獄》中，被稱為「天才」且總是懶洋洋的角色是？", o: ["凪誠士郎", "潔世一", "蜂樂迴"], a: 0, e: "凪誠士郎擁有頂級的停球天賦，初期對足球並無太大興趣。" },
+        { q: "在《咒術迴戰》懷玉·折玉篇中，五條悟與夏油傑保護的對象是？", o: ["天內理子", "家入硝子", "伏黑津美紀"], a: 0, e: "他們受命保護並抹殺「星漿體」天內理子。" }
+    ];
+
+    let currentQIndex = 0;
+    let score = 0;
+    let currentShuffledOptions = [];
+
+    // 初始化遊戲
+    function initGame() {
+        currentQIndex = 0;
+        score = 0;
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        showQuestion();
+    }
+
+    // 顯示題目
+    function showQuestion() {
+        const qData = questions[currentQIndex];
+        const optionsDiv = document.getElementById('options');
+        const nextBtn = document.getElementById('next-btn');
+        const feedback = document.getElementById('feedback');
+        
+        // 更新標題與分數
+        document.getElementById('case-number').innerText = `案件編號：${currentQIndex + 1} / ${questions.length}`;
+        document.getElementById('current-score').innerText = `目前積分：${score}`;
+        document.getElementById('question').innerText = qData.q;
+        
+        // 隱藏反饋區與下一題按鈕
+        feedback.style.display = 'none';
+        nextBtn.style.display = 'none';
+        optionsDiv.innerHTML = '';
+
+        // 【邏輯核心】打亂選項並保留正確答案對應
+        // 建立一個索引陣列 [0, 1, 2] 並打亂它
+        const indices = [0, 1, 2];
+        indices.sort(() => Math.random() - 0.5);
+        
+        // 紀錄這一題目前的選項順序
+        currentShuffledOptions = indices;
+
+        indices.forEach((originalIndex, displayIndex) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            // 顯示 A, B, C 前綴
+            const label = String.fromCharCode(65 + displayIndex); // 65 是 'A'
+            btn.innerHTML = `<span style="color:var(--bright-blue); margin-right:10px;">${label} | </span> ${qData.o[originalIndex]}`;
+            btn.onclick = () => checkAnswer(originalIndex, displayIndex);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    // 檢查答案
+    function checkAnswer(originalIndex, displayIndex) {
+        const qData = questions[currentQIndex];
+        const optionsDiv = document.getElementById('options');
+        const btns = optionsDiv.getElementsByClassName('btn');
+        const feedback = document.getElementById('feedback');
+        const feedbackStatus = document.getElementById('feedback-status');
+        const explanationText = document.getElementById('explanation-text');
+        
+        // 禁用所有按鈕
+        for (let btn of btns) { btn.disabled = true; }
+
+        // 找出正確答案在目前畫面上的標記 (A, B, 或 C)
+        const correctDisplayIndex = currentShuffledOptions.indexOf(qData.a);
+        const correctLabel = String.fromCharCode(65 + correctDisplayIndex);
+
+        if (originalIndex === qData.a) {
+            // 答對了
+            score += 10;
+            btns[displayIndex].classList.add('correct');
+            feedbackStatus.innerText = "● 推理成功！";
+            feedbackStatus.style.color = "#059669";
+            feedback.style.borderLeft = "10px solid #059669";
+        } else {
+            // 答錯了
+            btns[displayIndex].classList.add('wrong');
+            // 高亮正確答案
+            btns[correctDisplayIndex].classList.add('correct');
+            feedbackStatus.innerText = "○ 證據錯誤！";
+            feedbackStatus.style.color = "var(--red)";
+            feedback.style.borderLeft = "10px solid var(--red)";
+        }
+
+        // 顯示解釋（包含正確選項標籤）
+        explanationText.innerHTML = `<strong>正確答案是 (${correctLabel})</strong><br>${qData.e}`;
+        feedback.style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+        document.getElementById('current-score').innerText = `目前積分：${score}`;
+    }
+
+    // 處理下一題
+    function handleNext() {
+        currentQIndex++;
+        if (currentQIndex < questions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // 顯示結果
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        
+        const scoreDisplay = document.getElementById('score-display');
+        const commentDisplay = document.getElementById('comment-display');
+        
+        scoreDisplay.innerText = score;
+
+        if (score >= 130) {
+            commentDisplay.innerText = "完美破案！你已經掌握大部分觀念。";
+        } else if (score >= 90) {
+            commentDisplay.innerText = "表現不錯！再複習幾個觀念，就能更穩。";
+        } else {
+            commentDisplay.innerText = "線索還有點混亂，重新挑戰一次，下一輪就能抓到關鍵重點。";
+        }
+    }
+
+    // 啟動
+    window.onload = initGame;
+</script>
+
+</body>
+</html>
